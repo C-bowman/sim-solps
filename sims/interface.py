@@ -17,21 +17,46 @@ class SolpsInterface(object):
     """
     def __init__(self, balance_filepath):
         with netcdf.netcdf_file(balance_filepath, 'r') as solps:
-            self.ne = solps.variables['ne'].data.flatten()
-            self.te = solps.variables['te'].data.flatten() / 1.602e-19
-            self.ti = solps.variables['ti'].data.flatten() / 1.602e-19
+            # TODO - check we're cutting out correct cells from den_n
+            den_i = solps.variables['na'].data.copy()
+            trim = (slice(None), slice(None), slice(0, den_i.shape[-1]))
+            den_n = solps.variables['dab2'].data[trim].copy()
+            tab2 = solps.variables['tab2'].data[trim].copy() / 1.602e-19
+
+            self.ne = solps.variables['ne'].data.copy().flatten()
+            self.te = solps.variables['te'].data.copy().flatten() / 1.602e-19
+            self.ti = solps.variables['ti'].data.copy().flatten() / 1.602e-19
+            self.vol = solps.variables['vol'].data.copy().flatten()
+            self.dmb2 = solps.variables['dmb2'].data[trim].copy().flatten()
+            self.tmb2 = solps.variables['tmb2'].data[trim].copy().flatten() / 1.602e-19
+
+            # TODO - ask david about what's in 'bb'
+            self.bb = solps.variables['bb'].data.copy()
             self.n_cells = self.ne.size
 
-            den_i = solps.variables['na'].data
-            den_n = solps.variables['dab2'].data
-            self.n0 = den_n[:, :, 0:den_i.shape[-1]].flatten()
+            # process the species data into regular strings
+            species_bytestrings = solps.variables['species'].data.copy()
+            species = [''.join([a.decode('ASCII') for a in s]).strip() for s in species_bytestrings]
+            # now separate out the ions from the neutrals
+            ions = [(i, ''.join(s.split('+'))) for i, s in enumerate(species) if '+' in s]
+            self.neutrals = [s for s in species if '+' not in s]
+            self.ions = [i[1] for i in ions]
+            # set the ion densities
+            [setattr(self, f"n_{ion}", den_i[index, :, :].flatten()) for index, ion in ions]
+            # set the neutral densities and temperatures
+            for index, neutral in enumerate(self.neutrals):
+                setattr(self, f"n_{neutral}", den_n[index, :, :].flatten())
+                setattr(self, f"t_{neutral}", tab2[index, :, :].flatten())
+
             # find the cell centres
             crx = solps.variables['crx'].data.copy()
             cry = solps.variables['cry'].data.copy()
+            self.cr = crx.mean(axis=0)
+            self.cz = cry.mean(axis=0)
             R_sets = [v for v in crx.reshape([4,self.n_cells]).T]
             z_sets = [v for v in cry.reshape([4,self.n_cells]).T]
-            # get the indices used to define the sub-grids
-            del den_n, den_i
+
+            del den_n, den_i, tab2, species_bytestrings
 
         R, z, triangles = connect_meshes(
             R_sets,
@@ -94,7 +119,7 @@ class SolpsInterface(object):
 
         dR = self.mesh.R_limits[1] - self.mesh.R_limits[0]
         dz = self.mesh.z_limits[1] - self.mesh.z_limits[0]
-        fig = plt.figure(figsize=(10*(dR/dz)*1.3, 10))
+        fig = plt.figure(figsize=(8*(dR/dz)*1.3, 8))
         ax = fig.add_subplot(111)
         ax.set_facecolor(cmap(0.))
         ax.tripcolor(self.mesh.R, self.mesh.z, self.mesh.triangle_vertices, facecolors=vals)
