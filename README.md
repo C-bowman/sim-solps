@@ -1,2 +1,2 @@
-# solps-diagnostics
-Synthetic diagnostic modelling for SOLPS-ITER
+# sim-solps
+Synthetic instrument modelling for SOLPS-ITER
