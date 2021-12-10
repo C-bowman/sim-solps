@@ -12,6 +12,10 @@ class SolpsInterface(object):
     A class which provides an interface to the results of SOLPS-ITER
     simulations stored in a balance.nc file.
 
+    The value of a variable at any set of (R, z) positions can be accessed
+    using the ``get`` method. A list of available variables can be obtained
+    using the ``variables`` method.
+
     :param balance_filepath: \
         A path to a balance.nc file.
     """
@@ -33,7 +37,7 @@ class SolpsInterface(object):
             # TODO - ask david about what's in 'bb'
             self.bb = solps.variables['bb'].data.copy()
             self.n_cells = self.ne.size
-
+            self.variable_map = {k: v for k, v in solps_variable_map.items()}
             # process the species data into regular strings
             species_bytestrings = solps.variables['species'].data.copy()
             species = [''.join([a.decode('ASCII') for a in s]).strip() for s in species_bytestrings]
@@ -48,22 +52,31 @@ class SolpsInterface(object):
                 setattr(self, f"n_{neutral}", den_n[index, :, :].flatten())
                 setattr(self, f"t_{neutral}", tab2[index, :, :].flatten())
 
+            # build variable names for the ions and neutrals
+            ion_dens = {f"{ion} density": f"n_{ion}" for ion in self.ions}
+            neutral_dens = {f"{neutral} density": f"n_{neutral}" for neutral in self.neutrals}
+            neutral_temp = {f"{neutral} temperature": f"t_{neutral}" for neutral in self.neutrals}
+            # add them to the variable mapping
+            self.variable_map = {**self.variable_map, **ion_dens, **neutral_dens, **neutral_temp}
+
             # find the cell centres
             crx = solps.variables['crx'].data.copy()
             cry = solps.variables['cry'].data.copy()
             self.cr = crx.mean(axis=0)
             self.cz = cry.mean(axis=0)
-            R_sets = [v for v in crx.reshape([4,self.n_cells]).T]
-            z_sets = [v for v in cry.reshape([4,self.n_cells]).T]
+            R_sets = [v for v in crx.reshape([4, self.n_cells]).T]
+            z_sets = [v for v in cry.reshape([4, self.n_cells]).T]
 
             del den_n, den_i, tab2, species_bytestrings
 
+        # build the mesh data by splitting each cell into two triangles
         R, z, triangles = connect_meshes(
             R_sets,
             z_sets,
             [triangles_from_grid([2,2])]*self.n_cells
         )
 
+        # now we need to sort the triangles into the same order as the SOLPS cells.
         old_Rc = zeros(2 * self.n_cells)
         old_Rc[0::2] = crx[array([0, 1, 2]), :].mean(axis=0).flatten()
         old_Rc[1::2] = crx[array([1, 2, 3]), :].mean(axis=0).flatten()
@@ -77,8 +90,35 @@ class SolpsInterface(object):
 
         inverse_sort = double_argsort(old_Rc, old_zc).argsort()
         descrambler = double_argsort(new_Rc, new_zc)[inverse_sort]
-        triangles = triangles[descrambler,:]
+        triangles = triangles[descrambler, :]
         self.mesh = TriangularMesh(R=R, z=z, triangles=triangles)
+
+    def check_variable(self, variable):
+        if type(variable) is not str:
+            raise TypeError(
+                f"""
+                SOLPS variables must be specified as strings, but instead
+                type {type(variable)} was given.
+                """
+            )
+        v = variable.strip()
+        v = self.variable_map[v] if v in self.variable_map else v
+        if not hasattr(self, v):
+            raise ValueError(
+                f"""
+                The given string '{variable}' does not match any SOLPS variables
+                stored by SolpsInterface.
+                """
+            )
+        return v
+
+    def variables(self):
+        """
+        Returns a list containing all available variables.
+
+        :return: A list of the available variables.
+        """
+        return [k for k in self.variable_map]
 
     def get(self, variable, R, z, outside_value=0):
         """
@@ -99,10 +139,11 @@ class SolpsInterface(object):
         :return: \
             The values of the variable at the given points as a 1D numpy array.
         """
+        v = self.check_variable(variable)
         inds = self.mesh.find_triangle(R, z)
         inside = inds != -1
         values = full(R.size, fill_value=outside_value)
-        values[inside] = getattr(self, variable)[inds//2][inside]
+        values[inside] = getattr(self, v)[inds//2][inside]
         return values
 
     def plot(self, variable, draw_mesh=False):
@@ -112,9 +153,10 @@ class SolpsInterface(object):
         :param str variable: A string indicating which variable to plot.
         :param bool draw_mesh: A bool indicating whether to draw the mesh in the plot.
         """
+        v = self.check_variable(variable)
         vals = zeros(2*self.n_cells)
-        vals[0::2] = getattr(self, variable)
-        vals[1::2] = getattr(self, variable)
+        vals[0::2] = getattr(self, v)
+        vals[1::2] = getattr(self, v)
         cmap = get_cmap('viridis')
 
         dR = self.mesh.R_limits[1] - self.mesh.R_limits[0]
@@ -157,3 +199,11 @@ def connect_meshes(R_arrays, z_arrays, triangle_arrays):
     offsets[1:] = array([a.size for a in R_arrays], dtype=int)[:-1].cumsum()
     triangles = concatenate([tri+off for tri, off in zip(triangle_arrays, offsets)], axis=0, dtype=int)
     return remove_duplicate_vertices(R, z, triangles)
+
+
+solps_variable_map = {
+    "electron density": "ne",
+    "electron temperature": "te",
+    "ion temperature": "ti",
+    "cell volume": "vol"
+}

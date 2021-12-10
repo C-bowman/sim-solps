@@ -2,4 +2,4 @@ Interface to SOLPS results
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: sims.interface.SolpsInterface
-   :members: get, plot
+   :members: get, variables, plot
