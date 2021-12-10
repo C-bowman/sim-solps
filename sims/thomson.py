@@ -103,6 +103,13 @@ class ThomsonScattering(object):
         self.z_p = self.z[self.predicted_channels, :]
 
     def predict(self):
+        """
+        Calculate predictions of the electron temperature and density measurements
+        made by the instrument for the given SOLPS results.
+
+        :return: \
+            Predictions of the electron density and temperature as two numpy arrays.
+        """
         te_samples = self.interface.get('te', self.R, self.z)
         ne_samples = self.interface.get('ne', self.R, self.z)
 
