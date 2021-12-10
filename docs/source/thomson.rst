@@ -2,4 +2,4 @@ Thomson Scattering
 ~~~~~~~~~~~~~~~~~~
 
 .. autoclass:: sims.instruments.ThomsonScattering
-   :members: predict, update_interface
+   :members: predict, log_likelihood, update_interface

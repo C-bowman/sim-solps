@@ -1,10 +1,11 @@
 
 from numpy import array, ones, nan, full, ndarray
+from sims.likelihoods import gaussian_likelihood
 
 
 class ThomsonScattering(object):
     """
-    Synthetic diagnostic model for Thomson scattering.
+    Synthetic instrument model for Thomson scattering.
 
     :param R: \
         Radius positions of the sampling points as a 2D numpy array of shape
@@ -21,7 +22,7 @@ class ThomsonScattering(object):
     :param interface: \
         An instance of the ``SolpsInterface`` class. If the interface cannot be
         passed when creating the instance of ``ThomsonScattering``, it can be
-        specified afterward using the ``update_interface`` method.
+        specified later using the ``update_interface`` method.
 
     :param measurements: \
         A dictionary containing Thomson-scattering measurement data to which
@@ -71,17 +72,24 @@ class ThomsonScattering(object):
                     """
                 )
 
-        # now check all the arrays are the same length
-        sizes = [a.size for a in data_dict.values()]
-        if any([sizes[0] != s for s in sizes]):
-            raise ValueError(
-                f"""
-                The data stored under the following keys:
-                ...
-                """
-            )
+        # now check all the arrays have the correct length
+        for key, v in data_dict.items():
+            if v.size != self.n_channels:
+                raise ValueError(
+                    f"""
+                    The instrument was specified to have {self.n_channels} channels, but
+                    the given {key} array has size {v.size}.
+                    """
+                )
 
     def update_interface(self, interface):
+        """
+        Set the SOLPS data which will be used by the instrument model by passing
+        an instance of ``SolpsInterface`` from the ``sims.interface`` module.
+
+        :param interface: \
+            An instance of ``SolpsInterface`` from the ``sims.interface`` module.
+        """
         self.interface = interface
         # first find out which sample points are actually inside the mesh
         in_mesh = self.interface.mesh.interpolate(
@@ -122,11 +130,30 @@ class ThomsonScattering(object):
         te[self.predicted_channels] = te_predictions
         return ne, te
 
-    def log_likelihood(self):
-        pass
+    def log_likelihood(self, likelihood=gaussian_likelihood):
+        """
+        Calculate the log-likelihood of the experimental data for the given
+        SOLPS data.
 
-    @classmethod
-    def mastu_core(cls):
-        pass
+        :param likelihood: \
+            The likelihood function used in the calculation. By default, a
+            Gaussian likelihood is used. Other likelihoods can be imported
+            from the ``sims.likelihoods`` module and passed to change which
+            likelihood is used.
+
+        :return: The log-likelihood
+        """
+        ne_prediction, te_prediction = self.predict()
+        te_ll = likelihood(
+            self.te_data[self.predicted_channels],
+            self.te_err[self.predicted_channels],
+            te_prediction[self.predicted_channels]
+        )
+        ne_ll = likelihood(
+            self.ne_data[self.predicted_channels],
+            self.ne_err[self.predicted_channels],
+            ne_prediction[self.predicted_channels]
+        )
+        return te_ll + ne_ll
 
 
