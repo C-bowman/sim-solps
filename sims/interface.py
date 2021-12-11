@@ -161,15 +161,17 @@ class SolpsInterface(object):
 
         dR = self.mesh.R_limits[1] - self.mesh.R_limits[0]
         dz = self.mesh.z_limits[1] - self.mesh.z_limits[0]
-        fig = plt.figure(figsize=(8*(dR/dz)*1.3, 8))
+        fig = plt.figure(figsize=(8*(dR/dz)*1.8, 8))
         ax = fig.add_subplot(111)
         ax.set_facecolor(cmap(0.))
-        ax.tripcolor(self.mesh.R, self.mesh.z, self.mesh.triangle_vertices, facecolors=vals)
+        tricol = ax.tripcolor(self.mesh.R, self.mesh.z, self.mesh.triangle_vertices, facecolors=vals)
+        plt.colorbar(tricol, ax=ax, aspect=30, pad=0.02, label=variable)
         if draw_mesh:
             self.mesh.draw(ax, lw=0.5)
         ax.axis('equal')
         ax.set_xlabel('R (m)')
         ax.set_ylabel('z (m)')
+        fig.subplots_adjust(top=0.95, bottom=0.1)
         plt.show()
 
 
