@@ -142,7 +142,7 @@ class SolpsInterface(object):
         v = self.check_variable(variable)
         inds = self.mesh.find_triangle(R, z)
         inside = inds != -1
-        values = full(R.size, fill_value=outside_value, dtype=float)
+        values = full(R.shape, fill_value=outside_value, dtype=float)
         values[inside] = getattr(self, v)[inds//2][inside]
         return values
 

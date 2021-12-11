@@ -104,11 +104,11 @@ class ThomsonScattering(object):
         # of the probability is inside the mesh
         self.predicted_channels = (probs > 0.95).nonzero()
         # now re-normalise the weights to account of points outside the mesh
-        self.p = (in_mesh * self.weights)[self.predicted_channels, :]
+        self.p = (in_mesh * self.weights)[self.predicted_channels, :].squeeze()
         self.p = self.p / self.p.sum(axis=1)[:, None]
         # discard sample point data for channels outside mesh
-        self.R_p = self.R[self.predicted_channels, :]
-        self.z_p = self.z[self.predicted_channels, :]
+        self.R_p = self.R[self.predicted_channels, :].squeeze()
+        self.z_p = self.z[self.predicted_channels, :].squeeze()
 
     def predict(self):
         """
@@ -118,8 +118,8 @@ class ThomsonScattering(object):
         :return: \
             Predictions of the electron density and temperature as two numpy arrays.
         """
-        te_samples = self.interface.get('te', self.R, self.z)
-        ne_samples = self.interface.get('ne', self.R, self.z)
+        te_samples = self.interface.get('electron temperature', self.R_p, self.z_p)
+        ne_samples = self.interface.get('electron density', self.R_p, self.z_p)
 
         ne_predictions = (ne_samples * self.p).sum(axis=1)
         te_predictions = (te_samples * ne_samples * self.p).sum(axis=1) / ne_predictions
