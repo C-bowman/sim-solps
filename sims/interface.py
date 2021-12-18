@@ -34,8 +34,6 @@ class SolpsInterface(object):
             self.dmb2 = solps.variables['dmb2'].data[trim].copy().flatten()
             self.tmb2 = solps.variables['tmb2'].data[trim].copy().flatten() / 1.602e-19
 
-            # TODO - ask david about what's in 'bb'
-            self.bb = solps.variables['bb'].data.copy()
             self.n_cells = self.ne.size
             self.variable_map = {k: v for k, v in solps_variable_map.items()}
             # process the species data into regular strings
@@ -207,5 +205,7 @@ solps_variable_map = {
     "electron density": "ne",
     "electron temperature": "te",
     "ion temperature": "ti",
+    "molecular density": "dmb2",
+    "molecular temperature": "tmb2",
     "cell volume": "vol"
 }
