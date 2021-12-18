@@ -14,6 +14,7 @@
 #
 import os
 import sys
+from importlib.metadata import version as get_version
 
 sys.path.insert(0, os.path.abspath('../../'))
 sys.path.insert(0, os.path.abspath('./'))
@@ -25,9 +26,9 @@ copyright = '2021, Chris Bowman'
 author = 'Chris Bowman'
 
 # The full version, including alpha/beta/rc tags
-release = "0.1.0"
+release = get_version(project)
 # Major.minor version
-version = ""
+version = ".".join(release.split(".")[:2])
 
 # -- General configuration ---------------------------------------------------
 
