@@ -36,6 +36,15 @@ class ThomsonScattering(object):
         self.n_channels, self.n_samples = self.shape
         self.R = R
         self.z = z
+
+        if self.z.shape != self.shape or self.weights.shape != self.shape:
+            raise ValueError(
+                """
+                The 'R', 'z' and 'weights' arguments must all be 2D numpy arrays
+                of equal shapes.
+                """
+            )
+
         self.weights = weights / weights.sum(axis=1)[:, None]
 
         # attributes which depend on the interface
