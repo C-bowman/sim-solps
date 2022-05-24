@@ -40,8 +40,9 @@ class ThomsonScattering(object):
         if self.z.shape != self.shape or self.weights.shape != self.shape:
             raise ValueError(
                 """
-                The 'R', 'z' and 'weights' arguments must all be 2D numpy arrays
-                of equal shapes.
+                [ ThomsonScattering error ]
+                >> The 'R', 'z' and 'weights' arguments must all be 2D numpy arrays
+                >> of equal shapes.
                 """
             )
 
@@ -58,15 +59,26 @@ class ThomsonScattering(object):
 
         # attributes for storing experimental data
         if measurements is not None:
+            measurements = self.check_measurements(measurements)
             self.te_data = measurements['te_data']
             self.te_err = measurements['te_err']
             self.ne_data = measurements['ne_data']
             self.ne_err = measurements['ne_err']
-            self.check_measurements()
 
     def check_measurements(self, measurements):
+        measurement_keys = ['te_data', 'te_err', 'ne_data', 'ne_err']
+        for key in measurement_keys:
+            if key not in measurements:
+                raise KeyError(
+                    f"""
+                    [ ThomsonScattering error ]
+                    >> The dictionary passed via the 'measurements' keyword argument 
+                    >> does not contain the required key '{key}'.
+                    """
+                )
+
         data_dict = {}
-        for key in ['te_data', 'te_err', 'ne_data', 'ne_err']:
+        for key in measurement_keys:
             typ = type(measurements[key])
             if any([typ is t for t in [list, tuple]]):
                 data_dict[key] = array(measurements[key]).flatten()
@@ -75,9 +87,10 @@ class ThomsonScattering(object):
             else:
                 raise TypeError(
                     f"""
-                    The objected stored under the '{key}' key of the 'measurements'
-                    keyword argument should be of type 'ndarray', but instead type
-                    {typ} was found.
+                    [ ThomsonScattering error ]
+                    >> The objected stored under the '{key}' key of the 'measurements'
+                    >> keyword argument should be of type 'ndarray', but instead type
+                    >> {typ} was found.
                     """
                 )
 
@@ -86,10 +99,12 @@ class ThomsonScattering(object):
             if v.size != self.n_channels:
                 raise ValueError(
                     f"""
-                    The instrument was specified to have {self.n_channels} channels, but
-                    the given {key} array has size {v.size}.
+                    [ ThomsonScattering error ]
+                    >> The instrument was specified to have {self.n_channels} channels, but
+                    >> the given {key} array has size {v.size}.
                     """
                 )
+        return data_dict
 
     def update_interface(self, interface):
         """
