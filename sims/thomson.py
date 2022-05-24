@@ -36,6 +36,7 @@ class ThomsonScattering(object):
         self.n_channels, self.n_samples = self.shape
         self.R = R
         self.z = z
+        self.weights = weights
 
         if self.z.shape != self.shape or self.weights.shape != self.shape:
             raise ValueError(
