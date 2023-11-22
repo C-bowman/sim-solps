@@ -30,6 +30,7 @@ class ThomsonScattering:
         and 'ne_err'. This keyword argument is required in order to use the
         ``log_likelihood`` method.
     """
+
     def __init__(self, R, z, weights, interface=None, measurements=None):
         self.shape = R.shape
         self.n_channels, self.n_samples = self.shape
@@ -60,13 +61,13 @@ class ThomsonScattering:
         # attributes for storing experimental data
         if measurements is not None:
             measurements = self.check_measurements(measurements)
-            self.te_data = measurements['te_data']
-            self.te_err = measurements['te_err']
-            self.ne_data = measurements['ne_data']
-            self.ne_err = measurements['ne_err']
+            self.te_data = measurements["te_data"]
+            self.te_err = measurements["te_err"]
+            self.ne_data = measurements["ne_data"]
+            self.ne_err = measurements["ne_err"]
 
     def check_measurements(self, measurements):
-        measurement_keys = ['te_data', 'te_err', 'ne_data', 'ne_err']
+        measurement_keys = ["te_data", "te_err", "ne_data", "ne_err"]
         for key in measurement_keys:
             if key not in measurements:
                 raise KeyError(
@@ -117,13 +118,11 @@ class ThomsonScattering:
         self.interface = interface
         # first find out which sample points are actually inside the mesh
         in_mesh = self.interface.mesh.interpolate(
-            self.R,
-            self.z,
-            ones(self.interface.mesh.n_vertices)
+            self.R, self.z, ones(self.interface.mesh.n_vertices)
         )
         # use this to find what total probability of the instrument function
         # is inside the mesh for each channel
-        probs = (in_mesh*self.weights).sum(axis=1)
+        probs = (in_mesh * self.weights).sum(axis=1)
         # only make predictions for channels where over 95%
         # of the probability is inside the mesh
         self.predicted_channels = (probs > 0.95).nonzero()
@@ -142,8 +141,8 @@ class ThomsonScattering:
         :return: \
             Predictions of the electron density and temperature as two numpy arrays.
         """
-        te_samples = self.interface.get('electron temperature', self.R_p, self.z_p)
-        ne_samples = self.interface.get('electron density', self.R_p, self.z_p)
+        te_samples = self.interface.get("electron temperature", self.R_p, self.z_p)
+        ne_samples = self.interface.get("electron density", self.R_p, self.z_p)
 
         ne_predictions = (ne_samples * self.p).sum(axis=1)
         te_predictions = (te_samples * ne_samples * self.p).sum(axis=1) / ne_predictions
@@ -171,13 +170,11 @@ class ThomsonScattering:
         te_ll = likelihood(
             self.te_data[self.predicted_channels],
             self.te_err[self.predicted_channels],
-            te_prediction[self.predicted_channels]
+            te_prediction[self.predicted_channels],
         )
         ne_ll = likelihood(
             self.ne_data[self.predicted_channels],
             self.ne_err[self.predicted_channels],
-            ne_prediction[self.predicted_channels]
+            ne_prediction[self.predicted_channels],
         )
         return te_ll + ne_ll
-
-
