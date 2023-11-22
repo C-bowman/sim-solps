@@ -7,6 +7,42 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools]
+packages = ["sims"]
+
 [tool.setuptools_scm]
 write_to = "sims/_version.py"
 git_describe_command = "git describe --dirty --tags --long --first-parent"
+
+
+[project]
+name = "sim-solps"
+dynamic = ["version"]
+authors = [
+    {name = "Chris Bowman", email = "chris.bowman.physics@gmail.com"},
+]
+description = "Synthetic instrument modelling for SOLPS-ITER"
+readme = "README.md"
+license = {file = "LICENSE"}
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+requires-python = ">=3.9"
+dependencies = [
+    "numpy >= 1.20",
+    "scipy >= 1.6.3",
+    "matplotlib >= 3.4.2",
+    "tokamesh >= 0.4.1"
+]
+
+[project.urls]
+Homepage = "https://github.com/C-bowman/sim-solps"
+Documentation = "https://sim-solps.readthedocs.io/en/stable/"
+
+[project.optional-dependencies]
+tests = [
+    "pytest >= 3.3.0",
+]
