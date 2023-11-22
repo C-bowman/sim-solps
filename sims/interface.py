@@ -1,13 +1,12 @@
-
-from numpy import array, concatenate, zeros, full
+from numpy import array, concatenate, zeros, full, ndarray
 from scipy.io import netcdf
 from tokamesh import TriangularMesh
 from tokamesh.construction import remove_duplicate_vertices
 import matplotlib.pyplot as plt
-from matplotlib.cm import get_cmap
+from matplotlib import colormaps
 
 
-class SolpsInterface(object):
+class SolpsInterface:
     """
     A class which provides an interface to the results of SOLPS-ITER
     simulations stored in a balance.nc file.
@@ -71,7 +70,7 @@ class SolpsInterface(object):
         R, z, triangles = connect_meshes(
             R_sets,
             z_sets,
-            [triangles_from_grid([2,2])]*self.n_cells
+            [triangles_from_grid([2, 2])]*self.n_cells
         )
 
         # now we need to sort the triangles into the same order as the SOLPS cells.
@@ -91,7 +90,7 @@ class SolpsInterface(object):
         triangles = triangles[descrambler, :]
         self.mesh = TriangularMesh(R=R, z=z, triangles=triangles)
 
-    def check_variable(self, variable):
+    def check_variable(self, variable: str) -> str:
         if type(variable) is not str:
             raise TypeError(
                 f"""
@@ -110,7 +109,7 @@ class SolpsInterface(object):
             )
         return v
 
-    def variables(self):
+    def variables(self) -> list[str]:
         """
         Returns a list containing all available variables.
 
@@ -118,7 +117,7 @@ class SolpsInterface(object):
         """
         return [k for k in self.variable_map]
 
-    def get(self, variable, R, z, outside_value=0):
+    def get(self, variable: str, R: ndarray, z: ndarray, outside_value=0) -> ndarray:
         """
         Returns the value of a chosen variable at a given set of points.
 
@@ -144,7 +143,7 @@ class SolpsInterface(object):
         values[inside] = getattr(self, v)[inds//2][inside]
         return values
 
-    def plot(self, variable, draw_mesh=False):
+    def plot(self, variable: str, draw_mesh=False):
         """
         Generate a colour plot of a chosen variable.
 
@@ -155,7 +154,7 @@ class SolpsInterface(object):
         vals = zeros(2*self.n_cells)
         vals[0::2] = getattr(self, v)
         vals[1::2] = getattr(self, v)
-        cmap = get_cmap('viridis')
+        cmap = colormaps['viridis']
 
         dR = self.mesh.R_limits[1] - self.mesh.R_limits[0]
         dz = self.mesh.z_limits[1] - self.mesh.z_limits[0]
@@ -173,7 +172,7 @@ class SolpsInterface(object):
         plt.show()
 
 
-def triangles_from_grid(grid_shape):
+def triangles_from_grid(grid_shape: tuple[int, int]) -> ndarray:
     triangles = []
     m, n = grid_shape
     for i in range(m - 1):
@@ -197,7 +196,9 @@ def connect_meshes(R_arrays, z_arrays, triangle_arrays):
     z = concatenate(z_arrays)
     offsets = zeros(len(R_arrays), dtype=int)
     offsets[1:] = array([a.size for a in R_arrays], dtype=int)[:-1].cumsum()
-    triangles = concatenate([tri+off for tri, off in zip(triangle_arrays, offsets)], axis=0, dtype=int)
+    triangles = concatenate(
+        [tri+off for tri, off in zip(triangle_arrays, offsets)], axis=0, dtype=int
+    )
     return remove_duplicate_vertices(R, z, triangles)
 
 
