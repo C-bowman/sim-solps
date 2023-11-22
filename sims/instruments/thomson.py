@@ -1,9 +1,8 @@
-
 from numpy import array, ones, nan, full, ndarray
 from sims.likelihoods import gaussian_likelihood
 
 
-class ThomsonScattering(object):
+class ThomsonScattering:
     """
     Synthetic instrument model for Thomson scattering.
 

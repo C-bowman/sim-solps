@@ -1,5 +1,5 @@
 from numpy import linspace, exp
-from sims.thomson import ThomsonScattering
+from sims.instruments.thomson import ThomsonScattering
 import pytest
 
 @pytest.fixture
