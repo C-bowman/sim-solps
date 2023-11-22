@@ -1,8 +1,4 @@
-
-try:
-    from importlib.metadata import version, PackageNotFoundError
-except (ModuleNotFoundError, ImportError):
-    from importlib_metadata import version, PackageNotFoundError
+from importlib.metadata import version, PackageNotFoundError
 
 try:
     __version__ = version("tokamesh")
