@@ -115,7 +115,7 @@ class ThomsonScattering:
                 )
         return data_dict
 
-    def update_interface(self, interface):
+    def update_interface(self, interface: SolpsInterface):
         """
         Set the SOLPS data which will be used by the instrument model by passing
         an instance of ``SolpsInterface`` from the ``sims.interface`` module.
@@ -141,7 +141,7 @@ class ThomsonScattering:
         self.R_p = self.R[self.predicted_channels, :].squeeze()
         self.z_p = self.z[self.predicted_channels, :].squeeze()
 
-    def predict(self):
+    def predictions(self):
         """
         Calculate predictions of the electron temperature and density measurements
         made by the instrument for the given SOLPS results.
@@ -161,7 +161,7 @@ class ThomsonScattering:
         te[self.predicted_channels] = te_predictions
         return ne, te
 
-    def log_likelihood(self, likelihood=gaussian_likelihood):
+    def log_likelihood(self, likelihood=gaussian_likelihood) -> float:
         """
         Calculate the log-likelihood of the experimental data for the given
         SOLPS data.
@@ -174,7 +174,7 @@ class ThomsonScattering:
 
         :return: The log-likelihood
         """
-        ne_prediction, te_prediction = self.predict()
+        ne_prediction, te_prediction = self.predictions()
         te_ll = likelihood(
             self.te_data[self.predicted_channels],
             self.te_err[self.predicted_channels],
