@@ -19,7 +19,7 @@ class SolpsInterface:
         A path to a balance.nc file.
     """
 
-    def __init__(self, balance_filepath):
+    def __init__(self, balance_filepath: str):
         with netcdf.netcdf_file(balance_filepath, "r") as solps:
             # TODO - check we're cutting out correct cells from den_n
             den_i = solps.variables["na"].data.copy()
@@ -109,18 +109,20 @@ class SolpsInterface:
     def check_variable(self, variable: str) -> str:
         if type(variable) is not str:
             raise TypeError(
-                f"""
-                SOLPS variables must be specified as strings, but instead
-                type {type(variable)} was given.
+                f"""\n
+                \r[ SolpsInterface error ]
+                \r>> SOLPS variables must be specified as strings, but instead
+                \r>> type {type(variable)} was given.
                 """
             )
         v = variable.strip()
         v = self.variable_map[v] if v in self.variable_map else v
         if not hasattr(self, v):
             raise ValueError(
-                f"""
-                The given string '{variable}' does not match any SOLPS variables
-                stored by SolpsInterface.
+                f"""\n
+                \r[ SolpsInterface error ]
+                \r>> The given string '{variable}' does not match any SOLPS variables
+                \r>> stored by SolpsInterface.
                 """
             )
         return v
@@ -133,7 +135,9 @@ class SolpsInterface:
         """
         return [k for k in self.variable_map]
 
-    def get(self, variable: str, R: ndarray, z: ndarray, outside_value=0) -> ndarray:
+    def get(
+        self, variable: str, R: ndarray, z: ndarray, outside_value: float = 0.0
+    ) -> ndarray:
         """
         Returns the value of a chosen variable at a given set of points.
 

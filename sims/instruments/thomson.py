@@ -1,5 +1,6 @@
 from numpy import array, ones, nan, full, ndarray
 from sims.likelihoods import gaussian_likelihood
+from sims.interface import SolpsInterface
 
 
 class ThomsonScattering:
@@ -31,7 +32,14 @@ class ThomsonScattering:
         ``log_likelihood`` method.
     """
 
-    def __init__(self, R, z, weights, interface=None, measurements=None):
+    def __init__(
+        self,
+        R: ndarray,
+        z: ndarray,
+        weights: ndarray,
+        interface: SolpsInterface = None,
+        measurements: dict[str, ndarray] = None
+    ):
         self.shape = R.shape
         self.n_channels, self.n_samples = self.shape
         self.R = R
@@ -40,10 +48,10 @@ class ThomsonScattering:
 
         if self.z.shape != self.shape or self.weights.shape != self.shape:
             raise ValueError(
-                """
-                [ ThomsonScattering error ]
-                >> The 'R', 'z' and 'weights' arguments must all be 2D numpy arrays
-                >> of equal shapes.
+                """\n
+                \r[ ThomsonScattering error ]
+                \r>> The 'R', 'z' and 'weights' arguments must all be 2D numpy arrays
+                \r>> of equal shapes.
                 """
             )
 
@@ -71,10 +79,10 @@ class ThomsonScattering:
         for key in measurement_keys:
             if key not in measurements:
                 raise KeyError(
-                    f"""
-                    [ ThomsonScattering error ]
-                    >> The dictionary passed via the 'measurements' keyword argument 
-                    >> does not contain the required key '{key}'.
+                    f"""\n
+                    \r[ ThomsonScattering error ]
+                    \r>> The dictionary passed via the 'measurements' keyword argument 
+                    \r>> does not contain the required key '{key}'.
                     """
                 )
 
@@ -87,11 +95,11 @@ class ThomsonScattering:
                 data_dict[key] = measurements[key].flatten()
             else:
                 raise TypeError(
-                    f"""
-                    [ ThomsonScattering error ]
-                    >> The objected stored under the '{key}' key of the 'measurements'
-                    >> keyword argument should be of type 'ndarray', but instead type
-                    >> {typ} was found.
+                    f"""\n
+                    \r[ ThomsonScattering error ]
+                    \r>> The objected stored under the '{key}' key of the 'measurements'
+                    \r>> keyword argument should be of type 'ndarray', but instead type
+                    \r>> {typ} was found.
                     """
                 )
 
@@ -99,10 +107,10 @@ class ThomsonScattering:
         for key, v in data_dict.items():
             if v.size != self.n_channels:
                 raise ValueError(
-                    f"""
-                    [ ThomsonScattering error ]
-                    >> The instrument was specified to have {self.n_channels} channels, but
-                    >> the given {key} array has size {v.size}.
+                    f"""\n
+                    \r[ ThomsonScattering error ]
+                    \r>> The instrument was specified to have {self.n_channels} channels, but
+                    \r>> the given {key} array has size {v.size}.
                     """
                 )
         return data_dict
