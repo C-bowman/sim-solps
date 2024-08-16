@@ -1,7 +1,7 @@
 from importlib.metadata import version, PackageNotFoundError
 
 try:
-    __version__ = version("tokamesh")
+    __version__ = version("sim-solps")
 except PackageNotFoundError:
     from setuptools_scm import get_version
 
