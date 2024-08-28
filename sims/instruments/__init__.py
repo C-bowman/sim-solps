@@ -1,1 +1,2 @@
-from sims.instruments.thomson import ThomsonScattering
+from .thomson import ThomsonScattering
+from .base import Instrument

@@ -1,9 +1,10 @@
 from numpy import array, ones, nan, full, ndarray
 from sims.likelihoods import gaussian_likelihood
 from sims.interface import SolpsInterface
+from .base import Instrument
 
 
-class ThomsonScattering:
+class ThomsonScattering(Instrument):
     """
     Synthetic instrument model for Thomson scattering.
 
