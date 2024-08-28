@@ -75,7 +75,7 @@ class ThomsonScattering(Instrument):
             self.ne_data = measurements["ne_data"]
             self.ne_err = measurements["ne_err"]
 
-    def check_measurements(self, measurements):
+    def check_measurements(self, measurements: dict[str, ndarray]) -> dict[str, ndarray]:
         measurement_keys = ["te_data", "te_err", "ne_data", "ne_err"]
         for key in measurement_keys:
             if key not in measurements:
@@ -89,18 +89,18 @@ class ThomsonScattering(Instrument):
 
         data_dict = {}
         for key in measurement_keys:
-            typ = type(measurements[key])
-            if any([typ is t for t in [list, tuple]]):
-                data_dict[key] = array(measurements[key]).flatten()
-            elif typ is ndarray:
-                data_dict[key] = measurements[key].flatten()
+            measurement = measurements[key]
+            if isinstance(measurement, (list, tuple)):
+                data_dict[key] = array(measurement).flatten()
+            elif isinstance(measurement, ndarray):
+                data_dict[key] = measurement.flatten()
             else:
                 raise TypeError(
                     f"""\n
                     \r[ ThomsonScattering error ]
                     \r>> The objected stored under the '{key}' key of the 'measurements'
                     \r>> keyword argument should be of type 'ndarray', but instead type
-                    \r>> {typ} was found.
+                    \r>> {type(measurement)} was found.
                     """
                 )
 
@@ -110,8 +110,8 @@ class ThomsonScattering(Instrument):
                 raise ValueError(
                     f"""\n
                     \r[ ThomsonScattering error ]
-                    \r>> The instrument was specified to have {self.n_channels} channels, but
-                    \r>> the given {key} array has size {v.size}.
+                    \r>> The instrument was specified to have {self.n_channels} channels,
+                    \r>> but the given {key} array has size {v.size}.
                     """
                 )
         return data_dict
